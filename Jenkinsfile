@@ -6,7 +6,7 @@ pipeline {
         AWS_REGION = "Asia Pacific (Mumbai)"
         AWS_ACCOUNT_ID = "135808931687"
         ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}"
-        EC2_USER = "ec2-user"
+        EC2_USER = "ubuntu"
         EC2_HOST = "13.201.75.241"
     }
 
