@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+env/
+
+# Docker
+*.tar
+*.log
+
+# VSCode or other IDE settings
+.vscode/
+.idea/
+
+# Mac system files
+.DS_Store
+
+# OS-specific files
+Thumbs.db
+
+# Python packaging
+*.egg-info/
+build/
+dist/
+
+# Pycharm specific
+*.iml
+
