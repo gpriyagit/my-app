@@ -33,13 +33,13 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-key-jenkins']) {
+                sshagent(['ec2-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> '
-                    docker pull swapnahd/my-app:latest &&
+                    docker pull dimpleswapna/my-app:latest &&
                     docker stop my-app || true &&
                     docker rm my-app || true &&
-                    docker run -d -p 5000:5000 --name my-app your-dockerhub-username/my-app:latest
+                    docker run -d -p 5000:5000 --name my-app dimpleswapna/my-app:latest
                     '
                     '''
                 }
