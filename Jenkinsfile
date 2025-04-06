@@ -29,9 +29,9 @@ pipeline {
         }
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-key']) {
+                sshagent(['ssh-credential']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST '
+                    ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
                         docker pull swpanahd/my-app:latest &&
                         docker stop my-app || true &&
                         docker rm my-app || true &&
