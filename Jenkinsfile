@@ -3,15 +3,11 @@ pipeline {
 
     environment {
         IMAGE_NAME = "my-app"
-        AWS_REGION = "Asia Pacific (Mumbai)"
-        AWS_ACCOUNT_ID = "135808931687"
-        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}"
-        EC2_USER = "ubuntu"
-        EC2_HOST = "13.201.75.241"
+        DOCKER_HUB_USER = "swapnahd"
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone Repo') {
             steps {
                 git 'https://github.com/dimpleswapna/my-app.git'
             }
@@ -20,35 +16,32 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:latest")
+                    docker.build("${DOCKER_HUB_USER}/${IMAGE_NAME}")
                 }
             }
         }
 
-        stage('Push to ECR') {
+        stage('Push to Docker Hub') {
             steps {
-                script {
-                    sh '''
-                    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                    docker tag ${IMAGE_NAME}:latest $ECR_REPO:latest
-                    docker push $ECR_REPO:latest
-                    '''
+                withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
+                    script {
+                        docker.image("${DOCKER_HUB_USER}/${IMAGE_NAME}").push('latest')
+                    }
                 }
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                sshagent (credentials: ['ec2-key']) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << EOF
-                      aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                      docker pull $ECR_REPO:latest
-                      docker stop ${IMAGE_NAME} || true
-                      docker rm ${IMAGE_NAME} || true
-                      docker run -d -p 5000:5000 --name ${IMAGE_NAME} $ECR_REPO:latest
-                    EOF
-                    """
+                sshagent(['ec2-key-jenkins']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> '
+                    docker pull swapnahd/my-app:latest &&
+                    docker stop my-app || true &&
+                    docker rm my-app || true &&
+                    docker run -d -p 5000:5000 --name my-app your-dockerhub-username/my-app:latest
+                    '
+                    '''
                 }
             }
         }
