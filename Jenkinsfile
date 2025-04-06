@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         IMAGE_NAME = "my-app"
-        DOCKER_HUB_USER = "swapnahd"
+        DOCKER_HUB_USER = "swpanahd"
     }
     stages {
         stage('Clone Repo') {
