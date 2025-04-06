@@ -1,25 +1,20 @@
 pipeline {
     agent any
-
     environment {
         IMAGE_NAME = "my-app"
         DOCKER_HUB_USER = "swapnahd"
-        DOCKER_BUILDKIT = "1"  // Enables BuildKit to avoid the legacy warning
     }
-
     stages {
         stage('Clone Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/dimpleswapna/my-app.git'
             }
         }
-
         stage('Docker Access Test') {
             steps {
                 sh 'docker ps'
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -27,7 +22,6 @@ pipeline {
                 }
             }
         }
-
         stage('Push to Docker Hub') {
             steps {
                 withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
@@ -37,7 +31,6 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ec2-key']) {
