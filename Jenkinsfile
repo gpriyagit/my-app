@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/dimpleswapna/my-app.git'
+                git branch: 'main', url: 'https://github.com/dimpleswapna/my-app.git'
             }
         }
 
@@ -36,10 +36,10 @@ pipeline {
                 sshagent(['ec2-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> '
-                    docker pull dimpleswapna/my-app:latest &&
-                    docker stop my-app || true &&
-                    docker rm my-app || true &&
-                    docker run -d -p 5000:5000 --name my-app dimpleswapna/my-app:latest
+                    docker pull ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest &&
+                    docker stop ${IMAGE_NAME} || true &&
+                    docker rm ${IMAGE_NAME} || true &&
+                    docker run -d -p 5000:5000 --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest
                     '
                     '''
                 }
