@@ -4,12 +4,19 @@ pipeline {
     environment {
         IMAGE_NAME = "my-app"
         DOCKER_HUB_USER = "swapnahd"
+        DOCKER_BUILDKIT = "1"  // Enables BuildKit to avoid the legacy warning
     }
 
     stages {
         stage('Clone Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/dimpleswapna/my-app.git'
+            }
+        }
+
+        stage('Docker Access Test') {
+            steps {
+                sh 'docker ps'
             }
         }
 
@@ -36,10 +43,10 @@ pipeline {
                 sshagent(['ec2-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> '
-                    docker pull ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest &&
-                    docker stop ${IMAGE_NAME} || true &&
-                    docker rm ${IMAGE_NAME} || true &&
-                    docker run -d -p 5000:5000 --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest
+                        docker pull swapnahd/my-app:latest &&
+                        docker stop my-app || true &&
+                        docker rm my-app || true &&
+                        docker run -d -p 5000:5000 --name my-app swapnahd/my-app:latest
                     '
                     '''
                 }
