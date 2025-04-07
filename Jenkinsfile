@@ -12,12 +12,11 @@ pipeline {
             }
         }
 
-        stage('Generate Tag') {
+        stage('Generate Unique Tag') {
             steps {
                 script {
-                    // Use short Git commit hash or timestamp as tag
-                    TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    // Or use: TAG = sh(script: "date +%Y%m%d%H%M%S", returnStdout: true).trim()
+                    // Use timestamp as unique tag
+                    TAG = sh(script: "date +%Y%m%d%H%M%S", returnStdout: true).trim()
                     echo "Generated TAG: ${TAG}"
                 }
             }
