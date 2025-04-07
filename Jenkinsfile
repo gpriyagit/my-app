@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         IMAGE_NAME = "my-app"
-        DOCKER_HUB_USER = "swpanahd"
+        DOCKER_HUB_USER = "amulyapriya"
         EC2_HOST = "13.203.155.233"
     }
     stages {
