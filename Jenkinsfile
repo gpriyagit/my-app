@@ -1,12 +1,9 @@
 pipeline {
     agent any
-    parameters {
-        string(name: 'TAG', defaultValue: 'latest', description: 'Image tag to deploy')
-    }
     environment {
         IMAGE_NAME = "my-app"
         DOCKER_HUB_USER = "swpanahd"
-        EC2_HOST = "13.203.155.233"  // Replace with your current EC2 public IP
+        EC2_HOST = "13.203.155.233"
     }
     stages {
         stage('Clone Repo') {
@@ -14,31 +11,45 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/dimpleswapna/my-app.git'
             }
         }
-        stage('Build Docker Image') {
+
+        stage('Generate Tag') {
             steps {
                 script {
-                    docker.build("${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG}")
+                    // Use short Git commit hash or timestamp as tag
+                    TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    // Or use: TAG = sh(script: "date +%Y%m%d%H%M%S", returnStdout: true).trim()
+                    echo "Generated TAG: ${TAG}"
                 }
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_HUB_USER}/${IMAGE_NAME}:${TAG}")
+                }
+            }
+        }
+
         stage('Push to Docker Hub') {
             steps {
                 withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
                     script {
-                        docker.image("${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG}").push()
+                        docker.image("${DOCKER_HUB_USER}/${IMAGE_NAME}:${TAG}").push()
                     }
                 }
             }
         }
+
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ssh-credential']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
-                        docker pull ${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG} &&
+                        docker pull ${DOCKER_HUB_USER}/${IMAGE_NAME}:${TAG} &&
                         docker stop ${IMAGE_NAME} || true &&
                         docker rm ${IMAGE_NAME} || true &&
-                        docker run -d -p 5000:5000 --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG}
+                        docker run -d -p 5000:5000 --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:${TAG}
                     '
                     """
                 }
