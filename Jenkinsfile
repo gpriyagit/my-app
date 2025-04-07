@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/dimpleswapna/my-app.git'
+                git branch: 'main', url: 'https://github.com/gpriyagit/my-app.git'
             }
         }
 
