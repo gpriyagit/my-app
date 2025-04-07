@@ -1,9 +1,12 @@
 pipeline {
     agent any
+    parameters {
+        string(name: 'TAG', defaultValue: 'latest', description: 'Image tag to deploy')
+    }
     environment {
         IMAGE_NAME = "my-app"
         DOCKER_HUB_USER = "swpanahd"
-        EC2_HOST = "13.203.155.233"  // ← Replace with your current EC2 public IP
+        EC2_HOST = "13.203.155.233"  // Replace with your current EC2 public IP
     }
     stages {
         stage('Clone Repo') {
@@ -14,7 +17,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_HUB_USER}/${IMAGE_NAME}")
+                    docker.build("${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG}")
                 }
             }
         }
@@ -22,7 +25,7 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
                     script {
-                        docker.image("${DOCKER_HUB_USER}/${IMAGE_NAME}").push('latest')
+                        docker.image("${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG}").push()
                     }
                 }
             }
@@ -30,14 +33,14 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ssh-credential']) {
-                    sh '''
+                    sh """
                     ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
-                        docker pull swpanahd/my-app:latest &&
-                        docker stop my-app || true &&
-                        docker rm my-app || true &&
-                        docker run -d -p 5000:5000 --name my-app swpanahd/my-app:latest
+                        docker pull ${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG} &&
+                        docker stop ${IMAGE_NAME} || true &&
+                        docker rm ${IMAGE_NAME} || true &&
+                        docker run -d -p 5000:5000 --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:${params.TAG}
                     '
-                    '''
+                    """
                 }
             }
         }
